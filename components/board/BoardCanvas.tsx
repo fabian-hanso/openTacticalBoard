@@ -139,6 +139,17 @@ export function BoardCanvas({ scene, stageContainerRef }: { scene: Scene; stageC
   const widthMeters = scene.customDimensions?.widthMeters ?? template.widthMeters;
   const heightMeters = scene.customDimensions?.heightMeters ?? template.heightMeters;
 
+  // Switching template or custom dimensions changes the field size but keeps
+  // the same scene (no remount) — realign the view instead of leaving the
+  // old zoom/pan applied to a differently-sized field.
+  const fieldSizeRef = useRef({ widthMeters, heightMeters });
+  useEffect(() => {
+    if (fieldSizeRef.current.widthMeters !== widthMeters || fieldSizeRef.current.heightMeters !== heightMeters) {
+      fieldSizeRef.current = { widthMeters, heightMeters };
+      setView({ scale: 1, x: 0, y: 0 });
+    }
+  }, [widthMeters, heightMeters]);
+
   const ppm = useMemo(
     () =>
       computeFitScale(
