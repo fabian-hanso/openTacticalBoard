@@ -13,6 +13,7 @@ export default function BoardShell() {
   const hasHydrated = useSessionStore((s) => s.hasHydrated);
   const scene = useSessionStore((s) => s.activeScene());
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [stage, setStage] = useState<Konva.Stage | null>(null);
 
   useEffect(() => {
@@ -29,9 +30,13 @@ export default function BoardShell() {
 
   return (
     <div className="flex h-full w-full flex-col bg-chrome-bg">
-      <Toolbar onOpenTemplateDialog={() => setTemplateDialogOpen(true)} stage={stage} />
+      <Toolbar
+        onOpenTemplateDialog={() => setTemplateDialogOpen(true)}
+        onOpenPalette={() => setPaletteOpen(true)}
+        stage={stage}
+      />
       <div className="flex min-h-0 flex-1">
-        <Palette />
+        <Palette mobileOpen={paletteOpen} onCloseMobile={() => setPaletteOpen(false)} />
         <main className="min-w-0 flex-1">
           <BoardCanvas key={scene.id} scene={scene} stageContainerRef={setStage} />
         </main>

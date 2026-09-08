@@ -5,7 +5,9 @@ export interface ItemShapeProps<T> {
   ppm: number;
   isSelected: boolean;
   draggable: boolean;
-  onSelect: () => void;
+  onSelect: (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => void;
+  onDragStart?: (e: Konva.KonvaEventObject<DragEvent>) => void;
+  onDragMove?: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onDragEnd: (xMeters: number, yMeters: number) => void;
   onTransformEnd?: (e: Konva.KonvaEventObject<Event>) => void;
   onContextMenu?: (e: Konva.KonvaEventObject<PointerEvent>) => void;

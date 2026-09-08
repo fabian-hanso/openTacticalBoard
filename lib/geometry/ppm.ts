@@ -17,10 +17,10 @@ export function computeFitScale(
 // the nominal field box (e.g. goals sitting outside the pitch outline) stay visible.
 export const FIELD_MARGIN_METERS = 3;
 
-export function meterToScreen(xMeters: number, yMeters: number, ppm: number, offsetPx: number) {
-  return { x: offsetPx + xMeters * ppm, y: offsetPx + yMeters * ppm };
+export function meterToScreen(xMeters: number, yMeters: number, ppm: number, offsetX: number, offsetY: number) {
+  return { x: offsetX + xMeters * ppm, y: offsetY + yMeters * ppm };
 }
 
-export function screenToMeter(xPx: number, yPx: number, ppm: number, offsetPx: number) {
-  return { x: (xPx - offsetPx) / ppm, y: (yPx - offsetPx) / ppm };
+export function screenToMeter(xPx: number, yPx: number, ppm: number, offsetX: number, offsetY: number) {
+  return { x: (xPx - offsetX) / ppm, y: (yPx - offsetY) / ppm };
 }

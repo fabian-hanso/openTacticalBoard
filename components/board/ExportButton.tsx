@@ -22,9 +22,11 @@ export function ExportButton({ stage, sceneName }: { stage: Konva.Stage | null; 
   return (
     <button
       onClick={handleExport}
-      className="flex items-center gap-1.5 rounded-md bg-chrome-accent px-3 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+      className="flex shrink-0 items-center gap-1.5 rounded-md bg-chrome-accent px-2.5 py-1.5 text-sm font-medium text-white transition-opacity hover:opacity-90 sm:px-3"
+      title="Export PNG"
     >
-      <Download size={16} /> Export PNG
+      <Download size={16} />
+      <span className="hidden sm:inline">Export PNG</span>
     </button>
   );
 }

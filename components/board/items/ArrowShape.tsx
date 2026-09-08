@@ -10,7 +10,9 @@ interface Props {
   ppm: number;
   isSelected: boolean;
   draggable: boolean;
-  onSelect: () => void;
+  onSelect: (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => void;
+  onDragStart?: (e: Konva.KonvaEventObject<DragEvent>) => void;
+  onDragMove?: (e: Konva.KonvaEventObject<DragEvent>) => void;
   onTranslate: (deltaXMeters: number, deltaYMeters: number) => void;
   onEndpointMove: (end: "start" | "end", xMeters: number, yMeters: number) => void;
   onContextMenu?: (e: Konva.KonvaEventObject<PointerEvent>) => void;
@@ -23,6 +25,8 @@ export function ArrowShape({
   isSelected,
   draggable,
   onSelect,
+  onDragStart,
+  onDragMove,
   onTranslate,
   onEndpointMove,
   onContextMenu,
@@ -42,6 +46,8 @@ export function ArrowShape({
       onClick={onSelect}
       onTap={onSelect}
       onContextMenu={onContextMenu}
+      onDragStart={onDragStart}
+      onDragMove={onDragMove}
       onDragEnd={(e) => {
         const node = e.target as Konva.Group;
         onTranslate(node.x() / ppm, node.y() / ppm);

@@ -14,6 +14,8 @@ export function TextItemShape({
   isSelected,
   draggable,
   onSelect,
+  onDragStart,
+  onDragMove,
   onDragEnd,
   onEditRequest,
   onTransformEnd,
@@ -35,6 +37,8 @@ export function TextItemShape({
       onTap={onSelect}
       onDblClick={onEditRequest}
       onDblTap={onEditRequest}
+      onDragStart={onDragStart}
+      onDragMove={onDragMove}
       onDragEnd={(e) => onDragEnd(e.target.x() / ppm, e.target.y() / ppm)}
       onTransformEnd={onTransformEnd}
       onContextMenu={onContextMenu}

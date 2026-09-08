@@ -85,6 +85,8 @@ export function EquipmentShape({
   isSelected,
   draggable,
   onSelect,
+  onDragStart,
+  onDragMove,
   onDragEnd,
   onTransformEnd,
   onContextMenu,
@@ -101,6 +103,8 @@ export function EquipmentShape({
       draggable={draggable}
       onClick={onSelect}
       onTap={onSelect}
+      onDragStart={onDragStart}
+      onDragMove={onDragMove}
       onDragEnd={(e) => onDragEnd(e.target.x() / ppm, e.target.y() / ppm)}
       onTransformEnd={onTransformEnd}
       onContextMenu={onContextMenu}

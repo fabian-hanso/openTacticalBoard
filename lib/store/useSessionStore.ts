@@ -33,21 +33,29 @@ function createInitialSession(): Session {
 interface SessionState {
   session: Session;
   activeTool: ToolId;
-  selectedItemId: string | null;
+  selectedItemIds: string[];
   hasHydrated: boolean;
 
   setHasHydrated: (v: boolean) => void;
   setActiveTool: (tool: ToolId) => void;
   selectItem: (id: string | null) => void;
+  toggleItemSelection: (id: string) => void;
+  setSelection: (ids: string[]) => void;
 
   activeScene: () => Scene;
   addItem: (item: SceneItem) => void;
   updateItem: (id: string, patch: Partial<SceneItem>) => void;
   removeItem: (id: string) => void;
-  removeSelectedItem: () => void;
+  removeSelectedItems: () => void;
+  moveSelectedItemsBy: (dxMeters: number, dyMeters: number) => void;
   duplicateItem: (id: string) => void;
   bringItemToFront: (id: string) => void;
   sendItemToBack: (id: string) => void;
+
+  clipboardItems: SceneItem[];
+  clipboardPasteCount: number;
+  copySelectedItems: () => void;
+  pasteClipboard: () => void;
 
   setSceneTemplate: (templateId: FieldTemplateId, customDimensions?: { widthMeters: number; heightMeters: number }) => void;
 
@@ -81,12 +89,19 @@ export const useSessionStore = create<SessionState>()(
     (set, get) => ({
       session: createInitialSession(),
       activeTool: "select",
-      selectedItemId: null,
+      selectedItemIds: [],
       hasHydrated: false,
 
       setHasHydrated: (v) => set({ hasHydrated: v }),
-      setActiveTool: (tool) => set({ activeTool: tool, selectedItemId: null }),
-      selectItem: (id) => set({ selectedItemId: id }),
+      setActiveTool: (tool) => set({ activeTool: tool, selectedItemIds: [] }),
+      selectItem: (id) => set({ selectedItemIds: id ? [id] : [] }),
+      toggleItemSelection: (id) =>
+        set((state) => ({
+          selectedItemIds: state.selectedItemIds.includes(id)
+            ? state.selectedItemIds.filter((x) => x !== id)
+            : [...state.selectedItemIds, id],
+        })),
+      setSelection: (ids) => set({ selectedItemIds: ids }),
 
       activeScene: () => {
         const { session } = get();
@@ -128,14 +143,39 @@ export const useSessionStore = create<SessionState>()(
           );
           return {
             session: { ...state.session, scenes, updatedAt: Date.now() },
-            selectedItemId: state.selectedItemId === id ? null : state.selectedItemId,
+            selectedItemIds: state.selectedItemIds.filter((x) => x !== id),
           };
         }),
 
-      removeSelectedItem: () => {
-        const { selectedItemId, removeItem } = get();
-        if (selectedItemId) removeItem(selectedItemId);
-      },
+      removeSelectedItems: () =>
+        set((state) => {
+          const ids = new Set(state.selectedItemIds);
+          if (ids.size === 0) return state;
+          const scenes = state.session.scenes.map((scene) =>
+            scene.id === state.session.activeSceneId
+              ? touchScene({ ...scene, items: scene.items.filter((it) => !ids.has(it.id)) })
+              : scene
+          );
+          return {
+            session: { ...state.session, scenes, updatedAt: Date.now() },
+            selectedItemIds: [],
+          };
+        }),
+
+      moveSelectedItemsBy: (dxMeters, dyMeters) =>
+        set((state) => {
+          const ids = new Set(state.selectedItemIds);
+          if (ids.size === 0) return state;
+          const scenes = state.session.scenes.map((scene) =>
+            scene.id === state.session.activeSceneId
+              ? touchScene({
+                  ...scene,
+                  items: scene.items.map((it) => (ids.has(it.id) ? offsetItem(it, dxMeters, dyMeters) : it)),
+                })
+              : scene
+          );
+          return { session: { ...state.session, scenes, updatedAt: Date.now() } };
+        }),
 
       duplicateItem: (id) =>
         set((state) => {
@@ -156,7 +196,7 @@ export const useSessionStore = create<SessionState>()(
           });
           return {
             session: { ...state.session, scenes, updatedAt: Date.now() },
-            selectedItemId: newId ?? state.selectedItemId,
+            selectedItemIds: newId ? [newId] : state.selectedItemIds,
           };
         }),
 
@@ -182,6 +222,40 @@ export const useSessionStore = create<SessionState>()(
           return { session: { ...state.session, scenes, updatedAt: Date.now() } };
         }),
 
+      clipboardItems: [],
+      clipboardPasteCount: 0,
+
+      copySelectedItems: () => {
+        const { selectedItemIds, session } = get();
+        if (selectedItemIds.length === 0) return;
+        const scene = session.scenes.find((s) => s.id === session.activeSceneId);
+        if (!scene) return;
+        const idSet = new Set(selectedItemIds);
+        const items = scene.items.filter((it) => idSet.has(it.id));
+        if (items.length === 0) return;
+        set({ clipboardItems: items, clipboardPasteCount: 0 });
+      },
+
+      pasteClipboard: () =>
+        set((state) => {
+          if (state.clipboardItems.length === 0) return state;
+          const nextCount = state.clipboardPasteCount + 1;
+          const offset = DUPLICATE_OFFSET_METERS * nextCount;
+          const newItems = state.clipboardItems.map((it) =>
+            offsetItem({ ...it, id: crypto.randomUUID() }, offset, offset)
+          );
+          const scenes = state.session.scenes.map((scene) =>
+            scene.id === state.session.activeSceneId
+              ? touchScene({ ...scene, items: [...scene.items, ...newItems] })
+              : scene
+          );
+          return {
+            session: { ...state.session, scenes, updatedAt: Date.now() },
+            selectedItemIds: newItems.map((it) => it.id),
+            clipboardPasteCount: nextCount,
+          };
+        }),
+
       setSceneTemplate: (templateId, customDimensions) =>
         set((state) => {
           const scenes = state.session.scenes.map((scene) =>
@@ -189,7 +263,7 @@ export const useSessionStore = create<SessionState>()(
               ? touchScene({ ...scene, templateId, customDimensions, items: [] })
               : scene
           );
-          return { session: { ...state.session, scenes, updatedAt: Date.now() }, selectedItemId: null };
+          return { session: { ...state.session, scenes, updatedAt: Date.now() }, selectedItemIds: [] };
         }),
 
       addScene: () =>
@@ -207,7 +281,7 @@ export const useSessionStore = create<SessionState>()(
           scenes.splice(activeIndex + 1, 0, newScene);
           return {
             session: { ...state.session, scenes, activeSceneId: newScene.id, updatedAt: Date.now() },
-            selectedItemId: null,
+            selectedItemIds: [],
           };
         }),
 
@@ -242,11 +316,12 @@ export const useSessionStore = create<SessionState>()(
             : state.session.activeSceneId;
           return {
             session: { ...state.session, scenes, activeSceneId: nextActive, updatedAt: Date.now() },
-            selectedItemId: null,
+            selectedItemIds: [],
           };
         }),
 
-      setActiveScene: (sceneId) => set({ selectedItemId: null, session: { ...get().session, activeSceneId: sceneId } }),
+      setActiveScene: (sceneId) =>
+        set({ selectedItemIds: [], session: { ...get().session, activeSceneId: sceneId } }),
 
       renameScene: (sceneId, name) =>
         set((state) => ({
