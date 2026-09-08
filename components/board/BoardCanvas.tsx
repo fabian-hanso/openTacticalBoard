@@ -148,7 +148,11 @@ export function BoardCanvas({ scene, stageContainerRef }: { scene: Scene; stageC
     if (!stage) return null;
     const pos = stage.getPointerPosition();
     if (!pos) return null;
-    return screenToMeter(pos.x, pos.y, ppm, offsetPx);
+    // getPointerPosition() is raw container-relative pixels — it does NOT
+    // account for the stage's own zoom/pan transform, so undo that first.
+    const stageLocalX = (pos.x - view.x) / view.scale;
+    const stageLocalY = (pos.y - view.y) / view.scale;
+    return screenToMeter(stageLocalX, stageLocalY, ppm, offsetPx);
   }
 
   function zoomAtPoint(newScaleRaw: number, pointer: { x: number; y: number }) {
