@@ -3,6 +3,15 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Gray UI chrome — color is reserved for the movable board items. */
+  --chrome-bg: #e2e4e7;
+  --chrome-panel: #eef0f2;
+  --chrome-hover: #dde0e3;
+  --chrome-border: #c7cbd1;
+  --chrome-text: #1f2937;
+  --chrome-muted: #6b7280;
+  --chrome-accent: #52525b;
 }
 
 @theme inline {
@@ -10,13 +19,34 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --color-chrome-bg: var(--chrome-bg);
+  --color-chrome-panel: var(--chrome-panel);
+  --color-chrome-hover: var(--chrome-hover);
+  --color-chrome-border: var(--chrome-border);
+  --color-chrome-text: var(--chrome-text);
+  --color-chrome-muted: var(--chrome-muted);
+  --color-chrome-accent: var(--chrome-accent);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    --chrome-bg: #1c1d1f;
+    --chrome-panel: #232427;
+    --chrome-hover: #2e3033;
+    --chrome-border: #3a3c40;
+    --chrome-text: #e5e7eb;
+    --chrome-muted: #9299a3;
+    --chrome-accent: #71717a;
   }
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
