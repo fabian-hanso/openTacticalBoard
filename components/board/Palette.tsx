@@ -21,6 +21,14 @@ import {
 import { OBJECT_REGISTRY, PALETTE_CATEGORIES } from "@/lib/objectRegistry";
 import { useSessionStore, type ToolId } from "@/lib/store/useSessionStore";
 
+function isLightColor(hex: string): boolean {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return luminance > 0.7;
+}
+
 const ICONS: Record<string, LucideIcon> = {
   goalkeeper: Hand,
   coach: UserCog,
@@ -68,6 +76,7 @@ export function Palette() {
               .map(([id, entry]) => {
                 const Icon = ICONS[id] ?? Circle;
                 const isActive = activeTool === (id as ToolId);
+                const needsChip = !isActive && isLightColor(entry.color);
                 return (
                   <button
                     key={id}
@@ -78,7 +87,13 @@ export function Palette() {
                         : "text-chrome-text hover:bg-chrome-hover"
                     }`}
                   >
-                    <Icon size={16} color={isActive ? "#ffffff" : entry.color} strokeWidth={2.25} />
+                    {needsChip ? (
+                      <span className="flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded bg-slate-800">
+                        <Icon size={14} color={entry.color} strokeWidth={2.25} />
+                      </span>
+                    ) : (
+                      <Icon size={16} color={isActive ? "#ffffff" : entry.color} strokeWidth={2.25} />
+                    )}
                     {entry.paletteLabel}
                   </button>
                 );

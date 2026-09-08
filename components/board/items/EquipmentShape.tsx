@@ -47,14 +47,33 @@ function EquipmentGlyph({ item, w, h }: { item: EquipmentItem; w: number; h: num
         </>
       );
     }
-    case "mini-goal":
+    case "mini-goal": {
+      const postWidth = Math.max(2, w * 0.07);
+      const meshCols = 4;
+      const meshRows = 3;
+      const mesh = [];
+      for (let i = 1; i < meshCols; i++) {
+        const nx = -w / 2 + (w * i) / meshCols;
+        mesh.push(
+          <Line key={`v${i}`} points={[nx, -h / 2, nx, h / 2]} stroke={color} strokeWidth={0.75} opacity={0.45} />
+        );
+      }
+      for (let j = 1; j < meshRows; j++) {
+        const ny = -h / 2 + (h * j) / meshRows;
+        mesh.push(
+          <Line key={`h${j}`} points={[-w / 2, ny, w / 2, ny]} stroke={color} strokeWidth={0.75} opacity={0.45} />
+        );
+      }
       return (
         <>
-          <Rect x={-w / 2} y={-h / 2} width={w} height={h} stroke={color} strokeWidth={3} />
-          <Line points={[-w / 2, -h / 2, w / 2, h / 2]} stroke={color} strokeWidth={0.75} opacity={0.5} />
-          <Line points={[w / 2, -h / 2, -w / 2, h / 2]} stroke={color} strokeWidth={0.75} opacity={0.5} />
+          {mesh}
+          <Rect x={-w / 2} y={-h / 2} width={w} height={h} stroke={color} strokeWidth={1} opacity={0.6} />
+          <Line points={[-w / 2, -h / 2, w / 2, -h / 2]} stroke={color} strokeWidth={postWidth} lineCap="round" />
+          <Line points={[-w / 2, -h / 2, -w / 2, h / 2]} stroke={color} strokeWidth={postWidth} lineCap="round" />
+          <Line points={[w / 2, -h / 2, w / 2, h / 2]} stroke={color} strokeWidth={postWidth} lineCap="round" />
         </>
       );
+    }
     default:
       return <Rect x={-w / 2} y={-h / 2} width={w} height={h} fill={color} />;
   }
