@@ -163,10 +163,13 @@ export function BoardCanvas({ scene, stageContainerRef }: { scene: Scene; stageC
   // Center the padded field box in the container — a fixed margin-only offset
   // would hug the top-left corner whenever the field's aspect ratio doesn't
   // match the canvas's (e.g. a wide field in a tall mobile-portrait canvas).
+  // offsetX/Y is where the field RECT (not the padded box) starts, so the
+  // padded box's centered left/top edge needs the margin added back on.
   const paddedWidthPx = (widthMeters + FIELD_MARGIN_METERS * 2) * ppm;
   const paddedHeightPx = (heightMeters + FIELD_MARGIN_METERS * 2) * ppm;
-  const offsetX = (size.width - paddedWidthPx) / 2;
-  const offsetY = (size.height - paddedHeightPx) / 2;
+  const marginPx = FIELD_MARGIN_METERS * ppm;
+  const offsetX = (size.width - paddedWidthPx) / 2 + marginPx;
+  const offsetY = (size.height - paddedHeightPx) / 2 + marginPx;
 
   const selectedItem =
     selectedItemIds.length === 1 ? scene.items.find((it) => it.id === selectedItemIds[0]) : undefined;
@@ -324,7 +327,15 @@ export function BoardCanvas({ scene, stageContainerRef }: { scene: Scene; stageC
     // fills as much of the visible canvas as possible.
     const fillPpm = computeFitScale(containerW, containerH, widthMeters, heightMeters, 12);
     const targetScale = clamp(fillPpm / ppm, MIN_ZOOM, MAX_ZOOM);
-    zoomAtPoint(targetScale, { x: containerW / 2, y: containerH / 2 });
+    // Center the field directly rather than "zoom around the current
+    // viewport center" — those only coincide if the view hasn't been panned.
+    const fieldCenterX = offsetX + (widthMeters * ppm) / 2;
+    const fieldCenterY = offsetY + (heightMeters * ppm) / 2;
+    setView({
+      scale: targetScale,
+      x: containerW / 2 - fieldCenterX * targetScale,
+      y: containerH / 2 - fieldCenterY * targetScale,
+    });
   }
 
   function handleItemContextMenu(itemId: string, e: Konva.KonvaEventObject<PointerEvent>) {
