@@ -19,7 +19,7 @@ import {
   FREEHAND_COLOR,
   ROLE_COLORS,
 } from "@/lib/colors";
-import { FIELD_TEMPLATES, computeGridStep } from "@/lib/fieldTemplates";
+import { FIELD_TEMPLATES } from "@/lib/fieldTemplates";
 import { FIELD_MARGIN_METERS } from "@/lib/geometry/ppm";
 import type { FieldMarking, FieldTemplateConfig } from "@/lib/types/field";
 
@@ -163,39 +163,40 @@ function FieldPreview({ template }: { template: FieldTemplateConfig }) {
   const offset = FIELD_MARGIN_METERS * scale;
   const fieldW = template.widthMeters * scale;
   const fieldH = template.heightMeters * scale;
-  const gridStep = template.gridStepMeters ?? computeGridStep(Math.max(template.widthMeters, template.heightMeters));
+  // A fixed pixel-based grid, purely decorative and independent of the
+  // template's real (meters-accurate) grid — keeps all five thumbnails
+  // visually consistent regardless of the field's actual size.
+  const previewGridStepPx = boxSize / 9;
 
   return (
     <div className="flex h-28 items-center justify-center">
       <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} role="img" aria-hidden>
         <g transform={`translate(${offset} ${offset})`}>
           <rect width={fieldW} height={fieldH} fill={FIELD_GRASS} />
-          {template.showMeterGrid &&
-            Array.from({ length: Math.floor(template.widthMeters / gridStep) }).map((_, i) => (
-              <line
-                key={`v${i}`}
-                x1={(i + 1) * gridStep * scale}
-                y1={0}
-                x2={(i + 1) * gridStep * scale}
-                y2={fieldH}
-                stroke={FIELD_LINES}
-                strokeWidth="0.5"
-                opacity="0.35"
-              />
-            ))}
-          {template.showMeterGrid &&
-            Array.from({ length: Math.floor(template.heightMeters / gridStep) }).map((_, i) => (
-              <line
-                key={`h${i}`}
-                x1={0}
-                y1={(i + 1) * gridStep * scale}
-                x2={fieldW}
-                y2={(i + 1) * gridStep * scale}
-                stroke={FIELD_LINES}
-                strokeWidth="0.5"
-                opacity="0.35"
-              />
-            ))}
+          {Array.from({ length: Math.floor(fieldW / previewGridStepPx) }).map((_, i) => (
+            <line
+              key={`v${i}`}
+              x1={(i + 1) * previewGridStepPx}
+              y1={0}
+              x2={(i + 1) * previewGridStepPx}
+              y2={fieldH}
+              stroke={FIELD_LINES}
+              strokeWidth="0.5"
+              opacity="0.35"
+            />
+          ))}
+          {Array.from({ length: Math.floor(fieldH / previewGridStepPx) }).map((_, i) => (
+            <line
+              key={`h${i}`}
+              x1={0}
+              y1={(i + 1) * previewGridStepPx}
+              x2={fieldW}
+              y2={(i + 1) * previewGridStepPx}
+              stroke={FIELD_LINES}
+              strokeWidth="0.5"
+              opacity="0.35"
+            />
+          ))}
           {template.markings.map((m, i) => renderMarking(m, i, scale))}
           <rect width={fieldW} height={fieldH} stroke={FIELD_LINES} strokeWidth="1" fill="none" />
         </g>
